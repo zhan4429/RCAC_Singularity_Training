@@ -31,7 +31,16 @@ ssh USRID@CLUSTER.rcac.purdue.edu # You can login any Purdue cluster you have ac
 cd $RCAC_SCRATCH # We will practice in our scratch directory
 ```
 
-### Singularity build  
+
+### singularity pull  
+
+### singularity shell  
+
+### singularity exec
+
+
+
+### singularity build  
 To build a singularity container, we need to use a computer with elevated privileges, then copy or pull to cluster. To build the container in RCAC clusters, we can build remotely using the [Sylabs Remote Builder](https://cloud.sylabs.io/builder).  
 To remotely build an image using singularity, go through the following steps:  
 1. Go to: https://cloud.sylabs.io/, and generate a Sylabs account. 
@@ -96,5 +105,31 @@ INFO:    Build complete: prokka.sif
 
 Congratulations for your first self-built container :smiley: :smiley: :+1: :+1:  
 
+I cannot wait to run my first prokka container. In the `Inputs` directory, I put a bacteria genome belonging to Escherichia coli K12. We can use prokka to annotate the genome.  
+```
+singularity exec prokka.sif prokka --outdir prokka_EcoliK12  --prefix K12 Inputs/Ecoli_K12.fasta
+```
 
+Since this is only a small bacterial genome, prokka will finish within several minutes. 
+```
+[12:20:35] Output files:
+[12:20:35] prokka_EcoliK12/K12.gbk
+[12:20:35] prokka_EcoliK12/K12.ffn
+[12:20:35] prokka_EcoliK12/K12.faa
+[12:20:35] prokka_EcoliK12/K12.sqn
+[12:20:35] prokka_EcoliK12/K12.gff
+[12:20:35] prokka_EcoliK12/K12.fna
+[12:20:35] prokka_EcoliK12/K12.fsa
+[12:20:35] prokka_EcoliK12/K12.txt
+[12:20:35] prokka_EcoliK12/K12.log
+[12:20:35] prokka_EcoliK12/K12.err
+[12:20:35] prokka_EcoliK12/K12.tbl
+[12:20:35] prokka_EcoliK12/K12.tsv
+[12:20:35] Annotation finished successfully.
+[12:20:35] Walltime used: 4.85 minutes
+[12:20:35] If you use this result please cite the Prokka paper:
+[12:20:35] Seemann T (2014) Prokka: rapid prokaryotic genome annotation. Bioinformatics. 30(14):2068-9.
+[12:20:35] Type 'prokka --citation' for more details.
+[12:20:35] Share and enjoy!
+```
 
