@@ -20,23 +20,93 @@ Singularity is emerging as the containerization framework of choice in HPC envir
 Detailed singularity user guide is available at: [sylabs.io/guides/3.8/user-guide](https://sylabs.io/guides/3.8/user-guide/).  
 The main singularity command:  
 ```
-singularity [options] <subcommand> [subcommand options …]
+$ singularity [options] <subcommand> [subcommand options …]
 ```
+
 
 ## Practice singularity in RCAC HPC clusters  
 ### Login clusters  
 ```
-ssh USRID@CLUSTER.rcac.purdue.edu # You can login any Purdue cluster you have access
+$ ssh USRID@CLUSTER.rcac.purdue.edu # You can login any Purdue cluster you have access
 
-cd $RCAC_SCRATCH # We will practice in our scratch directory
+$ cd $RCAC_SCRATCH # We will practice in our scratch directory
 ```
 
 
 ### singularity pull  
+Download or build a container from a given URI. 
+```
+$ singularity pull [output file] <URI>
+```
+
+Let's pull a bowtie2 container from [Docker Hub](https://hub.docker.com/r/biocontainers/bowtie2/tags). [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml) is an ultrafast and memory-efficient tool for aligning sequencing reads to long reference sequences.  
+```
+$ singularity pull bowtie2_v2_4_1.sif  docker://biocontainers/bowtie2:v2.4.1_cv1
+```
+We can see that the container image file `bowtie2_v2_4_1.sif` was pull to our current directory. In the next section, we willuse this `bowtie2` container to align our read sequences to the reference genomes.  
+
 
 ### singularity shell  
 
+Let's go inside the pulled `bowtie2` container.  
+
+```
+$ singularity shell bowtie2_v2_4_1.sif 
+Singularity>/etc/*release
+DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=16.04
+DISTRIB_CODENAME=xenial
+DISTRIB_DESCRIPTION="Ubuntu 16.04.6 LTS"
+NAME="Ubuntu"
+VERSION="16.04.6 LTS (Xenial Xerus)"
+ID=ubuntu
+ID_LIKE=debian
+PRETTY_NAME="Ubuntu 16.04.6 LTS"
+VERSION_ID="16.04"
+HOME_URL="http://www.ubuntu.com/"
+SUPPORT_URL="http://help.ubuntu.com/"
+BUG_REPORT_URL="http://bugs.launchpad.net/ubuntu/"
+VERSION_CODENAME=xenial
+UBUNTU_CODENAME=xenial
+
+Singularity> which bowtie2
+/usr/local/bin/bowtie2
+```
+
 ### singularity exec
+With the `bowtie2` container, we can do some real research. In the `Inputs` folder, I put two fastq files (input_1.fastq and input_2.fastq)from pair-end sequencing of the bacteria *Escherichia coli*. In addtion, the `Inputs` folder also has the a file `Ecoli_K12.fasta` containing the reference *E. coli* K12 genome. Let's align the two fastq files against the reference `Ecoli_K12.fasta` with our `Bowtie2` container. The details about `Bowtie2` usage is available [here](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml). 
+
+```
+## build the index of the reference genome 
+$ singularity exec bowtie2_v2_4_1.sif bowtie2-build Inputs/Ecoli_K12.fasta Inputs/Ecoli_K12
+## Align fastq reads to reference genome
+$ singularity exec bowtie2_v2_4_1.sif bowtie2 -x Inputs/Ecoli_K12 -1 Inputs/input_1.fastq -2 Inputs/input_2.fastq -S Ecoli_out.sam
+
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LANGUAGE = (unset),
+	LC_ALL = (unset),
+	LANG = "en_US.UTF-8"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+10000 reads; of these:
+  10000 (100.00%) were paired; of these:
+    191 (1.91%) aligned concordantly 0 times
+    9419 (94.19%) aligned concordantly exactly 1 time
+    390 (3.90%) aligned concordantly >1 times
+    ----
+    191 pairs aligned concordantly 0 times; of these:
+      145 (75.92%) aligned discordantly 1 time
+    ----
+    46 pairs aligned 0 times concordantly or discordantly; of these:
+      92 mates make up the pairs; of these:
+        42 (45.65%) aligned 0 times
+        24 (26.09%) aligned exactly 1 time
+        26 (28.26%) aligned >1 times
+99.79% overall alignment rate
+```
+Some containers may give us warnings, however, in most cases, we can just ignore them.  
+
 
 
 
@@ -92,9 +162,9 @@ export PATH=/opt/conda/envs/prokka/bin:$PATH
 
 Let's build our first container.  
 ```
-$singularity remote login
+$ singularity remote login
 ##Paste the access token at the prompt.  
-$singularity build --remote prokka.sif Inputs/prokka.def 
+$ singularity build --remote prokka.sif Inputs/prokka.def 
 ```
 
 This will take some time, maybe more than 10 mins. After it finishes, you can see information simialar to below in the terminal:  
@@ -107,7 +177,7 @@ Congratulations for your first self-built container :smiley: :smiley: :+1: :+1:
 
 I cannot wait to run my first prokka container. In the `Inputs` directory, I put a bacteria genome belonging to Escherichia coli K12. We can use prokka to annotate the genome.  
 ```
-singularity exec prokka.sif prokka --outdir prokka_EcoliK12  --prefix K12 Inputs/Ecoli_K12.fasta
+$ singularity exec prokka.sif prokka --outdir prokka_EcoliK12  --prefix K12 Inputs/Ecoli_K12.fasta
 ```
 
 Since this is only a small bacterial genome, prokka will finish within several minutes. 
